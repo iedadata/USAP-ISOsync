@@ -1,3 +1,9 @@
+
+# database connection information
+
+DBConnection.php
+db_in.php
+
 # Windows image file caches
 Thumbs.db
 ehthumbs.db
