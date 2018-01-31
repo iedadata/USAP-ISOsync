@@ -16,7 +16,7 @@
  */
 
 	require_once "DBConnection.php";
-	require_once "lib.php";
+	// require_once "lib.php";
 	
 	$option = 'sync1';
 	
