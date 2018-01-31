@@ -3,6 +3,7 @@
 
 DBConnection.php
 db_in.php
+metadata/
 
 # Windows image file caches
 Thumbs.db
