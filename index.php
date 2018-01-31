@@ -17,18 +17,34 @@
 
 	require_once "DBConnection.php";
 	require_once "lib.php";
-
-//	$dataset_id=$_GET['id'];
-	$dataset_id='601026';
 	
-	if($dataset_id==""){
-		$dataset_id="nonegiven";
-	};
+	$option = 'sync1';
+	
 
-	$sql=" SELECT id, status_id, datacitexml dcxml  from generate_dc_xmlastext
+	$dataset_id=$_GET['id'];
+	
+    //$dataset_id='601026';
+	
+	if (endsWith($dataset_id,'iso.xml')) {
+	    $dataset_id = substr($dataset_id,0,6);
+	    $option='isoxml';
+	} elseif(endswith($dataset_id,'.xml')){
+	    $dataset_id = substr($dataset_id,0,6);
+	    $option='datacitexml';
+	} elseif ($dataset_id=='sync') {
+	    $option = 'all';
+	    $dataset_id='';
+	}
+	
+	if($dataset_id==''){
+	    $sql=" SELECT id, status_id, datacitexml dcxml  from generate_datacite_xml";
+	    $option = 'all';
+	}  else {	
+	$sql=" SELECT id, status_id, datacitexml dcxml  from generate_datacite_xml
 	where id='{$dataset_id}';";
-    echo $sql;
-//    echo "\n";
+	}
+    //echo '<p>' . $sql . ' option: ' . $option;
+    //echo '</p>';
 
     $xslfile = "DataciteToISO19139v3.2.xslt";
     $xslt = new XSLTProcessor();
@@ -36,31 +52,43 @@
     
 $dbconnect_main = DBConnection::doUSAPDBConnect();
 	$rs = pg_query($dbconnect_main, $sql) or log_error("USAPDataCiteTransform.php: ".pg_result_error($dbconnect_main), "Error occured executing the select query.");
-	while ($row = pg_fetch_object($rs)) {
-			 
-	    
-	    echo $row->id;
-	    echo "\n";
-	    echo $row->status_id;
-/* 	    echo "<p> <textarea rows='100' cols='100'>";
-	    echo $row->dcxml;
-	    echo "</textarea></p>"; */
-	    
+
+    $counter = 0;	
+	while ($row = pg_fetch_object($rs)) {	 
 
 	    $content = $row->dcxml;
 	    $newxml = $xslt->transformToXml(new SimpleXMLElement($content));
-/* 	    echo "<p> <textarea rows='200' cols='100'>";
-	    echo $newxml;
-	    echo "</textarea></p>"; */
 	    
+	    if ($option=='all' or $option=='sync1'){
+	    //echo 'all or sync1' . "\n";
 	    $my_file = 'metadata/iso/usap/usap_iso_' . $row->id . '.xml';
 	    $handle = fopen($my_file, 'w') or die('Cannot open file:  '.$my_file); //implicitly creates file
 	    fwrite($handle, $newxml);
+	    $counter=$counter+1;
 	    fclose($handle);
+	    } elseif ($option=='isoxml'){
+	        //echo "\n" . 'echo iso xml' . "\n";
+	        echo $newxml;
+	    } elseif ($option=='datacitexml'){
+	        //echo "\n" . 'echo datacite xml' . "\n";
+	        echo $row->dcxml;
+	    } else {
+	        echo 'option fail';
+	        echo '<p>';
+	    }
 	}
 	DBConnection::doDBClose($dbconnect_main);
+	if ($option=='all' or $option=='sync1'){
+	    echo "\n" . $counter . ' records written to metadata/iso/usap/';
+	}
 	
-
+	// from  https://stackoverflow.com/questions/834303/startswith-and-endswith-functions-in-php
+	function endsWith($haystack, $needle)
+	{
+	    $length = strlen($needle);
+	    //echo 'endswith ' . $haystack . ' ' .$needle;
+	    return $length === 0 ||
+	    (substr($haystack, -$length) === $needle);
+	}
 	
-
 ?>
