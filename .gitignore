@@ -4,6 +4,9 @@
 DBConnection.php
 db_in.php
 metadata/
+.settings/
+.project
+.buildpath
 
 # Windows image file caches
 Thumbs.db
